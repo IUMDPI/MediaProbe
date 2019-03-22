@@ -1,4 +1,22 @@
 #!/bin/env python3
+"""
+Copyright 2018-2019 Trustees of Indiana University
+
+This code is licensed under the APACHE 2.0 License
+
+Original code by Brian Wheeler (bdwheele@indiana.edu)
+
+-------
+
+This will process a file and create either a data structure (if called as a library) or 
+a JSON blob (when called from the command line) of information about a given file.
+
+This effectively combines ffprobe, imagemagic identify, file, and pdfinfo.  Other formats
+can easily be added.   If the external tools are not available, only basic information will
+be created.
+
+"""
+
 import argparse
 import json
 import os
@@ -8,7 +26,7 @@ import re
 import zipfile
 
 
-
+# Default locations of these tools on most linux boxes
 default_programs = {
     'ffprobe': "/usr/bin/ffprobe",
     'identify': "/usr/bin/identify",
@@ -18,6 +36,9 @@ default_programs = {
 
 
 def probe_file(file, programs=default_programs):
+    """
+    Run all of the probes on a given file.
+    """
     data = {'container': {'name': os.path.basename(file),
                           'size': os.path.getsize(file),
                           'time': os.path.getmtime(file)
@@ -40,13 +61,26 @@ def probe_file(file, programs=default_programs):
     return data
 
 
+def is_valid_program(program):
+    """
+    Test to make sure a program is present and executable
+    """
+    return (program is not None and 
+            os.path.exists(program) and 
+            os.path.isfile(program) and 
+            os.access(program, os.X_OK))
+    
+
 
 def get_mime_type(file, programs):
     """
     Use the file command to get the mime type for a file
-    """
-    result = subprocess.run([programs['file'], '--brief', '--mime-type', '--dereference', file], capture_output=True, check=True)
-    mime = str(result.stdout, 'utf-8').rstrip()
+    """    
+    if is_valid_program(programs['file']):
+        result = subprocess.run([programs['file'], '--brief', '--mime-type', '--dereference', file], capture_output=True, check=True)
+        mime = str(result.stdout, 'utf-8').rstrip()
+    else:
+        mime = "unknown/unknown"
     return mime
 
 def probe_time_based_media(file, data, programs):
@@ -56,6 +90,9 @@ def probe_time_based_media(file, data, programs):
     """
     if not re.match(r"(audio|video)/", data['container']['mime_type']):
         return
+
+    if not is_valid_program(programs['ffprobe']):
+        return 
 
     result = subprocess.run([programs['ffprobe'], '-v', '0', '-print_format', 'json', '-show_format', '-show_streams', file],
                             check=True, capture_output=True)
@@ -197,9 +234,13 @@ def ratio2fraction(ratio):
 
 
 def probe_image_media(file, data, programs):
+    """
+    Use ImageMagick's identify to gather information about a file
+    """
     if not re.match(r"image/", data['container']['mime_type']):
         return
-
+    if not is_valid_program(programs['identify']):
+        return
 
     format_string = '''{
   "@type": "image",
@@ -242,10 +283,17 @@ def probe_image_media(file, data, programs):
  
 
 def probe_text(file, data, programs):
+    """ 
+    Probe a text file for more information.
+    """
+    
     if (not re.match(r"text/", data['container']['mime_type'])
         and not re.match(r"application/xml", data['container']['mime_type'])):
         return
     s = {'@type': 'text'}
+
+    if not is_valid_program(programs['file']):
+        return
 
     result = subprocess.run([programs['file'], '--brief', '--mime-encoding', '--dereference', file], capture_output=True, check=True)
     s['encoding'] = str(result.stdout, 'utf-8').rstrip()
@@ -278,7 +326,9 @@ def probe_document(file, data, programs):
     s = {'@type': 'document'}
     mime_type = data['container']['mime_type']
     if mime_type == "application/pdf":
-        
+        if not is_valid_program(programs['pdfinfo']):
+            return
+
         result = subprocess.run([programs['pdfinfo'], file], capture_output=True, check=True)
         for l in str(result.stdout, 'utf-8').rstrip().split("\n"):
             print(l)
@@ -367,14 +417,6 @@ def probe_document(file, data, programs):
         return
     data['streams'] = {'document': []}
     data['streams']['document'].append(s)
-
-
-
-
-
-
-
-
 
 
 if __name__ == "__main__":
