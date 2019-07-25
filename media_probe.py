@@ -34,8 +34,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
     paths = None
     if args.config[0]:
-        # load configuration file
-        pass
+        with open(args.config[0]) as fp:
+            paths = yaml.safe_load(fp)
     
     mp = MediaProbe(paths)
     data = mp.probe(args.mediafile)

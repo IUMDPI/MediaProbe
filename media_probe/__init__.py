@@ -59,7 +59,7 @@ class MediaProbe:
 
     def get_tool_path(self, tool):
         "Get the executable path for the tool in question"
-        if tool not in self.paths or not (os.access(self.paths[tool], os.X_OK) and os.path.isfile(self.paths[tool])):
+        if tool not in self.paths or not os.access(self.paths[tool], os.X_OK):
             # try to find the tool and update the path
             p = shutil.which(tool)
             if p is None:
