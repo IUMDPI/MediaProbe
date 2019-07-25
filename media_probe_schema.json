@@ -1,0 +1,329 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "http://dlib.indiana.edu/media_probe.schema.json",
+    "title": "Media Probe Schema",
+    "description":  "Structured technical metadata for different file types",
+    "type": "object",
+    "properties": {
+        "container": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "The name of the file"
+                },
+                "size": {
+                    "type": "integer",
+                    "description": "The size of the file, in octects"
+                },
+                "time": {
+                    "type": "number",
+                    "description": "The modification time of the file, in unix epoch seconds"
+                },
+                "mime_type": {
+                    "type": "string",
+                    "description": "The MIME content type of the file"
+                },
+                "type": {
+                    "type": "string",
+                    "description": "The basic type of the file",
+                    "enum": ["file", "dir", "other"]
+                },
+                "duration": {
+                    "type": "number",
+                    "description": "For time-based media, the run-time in seconds"
+                },
+                "format": {
+                    "type": "string",
+                    "description": "Container format"
+                },
+                "tags": {
+                    "type": "object",
+                    "description": "embedded metadata tags",
+                    "additionalProperties": true
+                }
+            },
+            "additionalProperties": true,
+            "required": ["name", "size", "time", "mime_type", "type"]
+        },
+        "streams": {
+            "type": "object",
+            "properties":{
+                "audio": {
+                    "type": "array",
+                    "description": "audio streams",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "@type": {
+                                "const": "audio"
+                            },
+                            "@position": {
+                                "type": "integer",
+                                "description": "stream position"
+                            },
+                            "codec": {
+                                "type": "string",
+                                "description": "audio codec"
+                            },
+                            "duration": {
+                                "type": "number",
+                                "description": "stream duration in seconds"
+                            },
+                            "sample_format": {
+                                "type": "string",
+                                "description": "sample format"
+                            },
+                            "channels": {
+                                "type": "integer",
+                                "description": "number of channels"
+                            },
+                            "channel_layout": {
+                                "type": "string",
+                                "description": "audio channel layout"
+                            },
+                            "sample_rate": {
+                                "type": "integer",
+                                "description": "sample rate"
+                            },
+                            "bits_per_sample": {
+                                "type": "integer",
+                                "description": "bits per sample"
+                            },
+                            "bit_rate": {
+                                "type": "number",
+                                "description": "bit rate"
+                            },
+                            "user_data": {
+                                "type": "object",
+                                "description":  "stream metadata",
+                                "additionalProperties": true
+                            }        
+                        },                        
+                        "required": ["@type", "@position", "codec", "duration", "sample_format", "channels",
+                                     "sample_rate"],
+                        "additionalProperties": true
+                    }                    
+                },
+                "video": {
+                    "type": "array",
+                    "description": "video streams",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "@type": {
+                                "const": "video"
+                            },
+                            "@position": {
+                                "type": "integer",
+                                "description": "stream position"
+                            },
+                            "codec": {
+                                "type": "string",
+                                "description": "video codec"
+                            },
+                            "duration": {
+                                "type": "number",
+                                "description": "stream duration in seconds"
+                            },
+                            "dimensions": {
+                                "type": "object",
+                                "description":  "Video frame dimensions",
+                                "properties": {
+                                    "height": {
+                                        "type": "integer",
+                                        "description": "frame height"
+                                    },
+                                    "width": {
+                                        "type": "integer",
+                                        "description": "frame width"                                        
+                                    },
+                                    "sample_aspect_ratio": {"$ref": "#/definitions/fraction"},
+                                    "display_aspect_ratio": {"$ref": "#/definitions/fraction"}
+                                },
+                                "additionalProperties": false,
+                                "required": ["width", "height", "display_aspect_ratio", "sample_aspect_ratio"]
+                            },
+                            "pixel_format": {
+                                "type": "string",
+                                "description": "pixel format"
+                            },
+                            "bit_rate": {
+                                "type": "number",
+                                "description": "stream bit rate"
+                            },
+                            "bits_per_sample": {
+                                "type": "integer",
+                                "description": "bits per sample"
+                            },
+                            "frame_rate": {
+                                "type": "number",
+                                "description": "frames per second"
+                            },
+                            "color_space": {
+                                "type": "string",
+                                "description": "Color space"
+                            },
+                            "color_transfer": {
+                                "type": "string",
+                                "description": "Color transfer settings"
+                            },
+                            "codec_profile": {
+                                "type": "string",
+                                "description": "Codec profile used"
+                            },
+                            "user_data": {
+                                "type": "object",
+                                "description":  "stream metadata",
+                                "additionalProperties": true
+                            }        
+                        },                        
+                        "required": ["@type", "@position", "codec", "duration", "dimensions", "frame_rate"],
+                        "additionalProperties": true
+                    }
+                },
+                "image": {
+                    "type": "array",
+                    "description": "image streams",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "@type": {
+                                "const": "image"
+                            },
+                            "@position": {
+                                "type": "integer",
+                                "description": "stream position"
+                            },
+                            "dimensions": {
+                                "type": "object",
+                                "properties": {
+                                    "width": {
+                                        "type": "integer",
+                                        "description": "Image width"
+                                    },
+                                    "height": {
+                                        "type": "integer",
+                                        "description": "Image height"
+                                    },
+                                    "resolution": {
+                                        "type": "object",
+                                        "properties": {
+                                            "horizontal": {
+                                                "type": "integer",
+                                                "description": "Horizontal resolution"
+                                            },
+                                            "vertical": {
+                                                "type": "integer",
+                                                "description": "Vertical Resolution"
+                                            },
+                                            "unit": {
+                                                "type": "string",
+                                                "description": "Resolution unit"
+                                            }
+                                        },
+                                        "additionalProperties": false,
+                                        "required": ["horizontal", "vertical", "unit"]
+                                    }
+                                },
+                                "additionalProperties": false,
+                                "required": ["width", "height"]
+                            },
+                            "pixel_type": {
+                                "type": "string",
+                                "description": "Pixel type"
+                            },
+                            "codec": {
+                                "type": "string",
+                                "description": "Image codec"
+                            },
+                            "bit_depth": {
+                                "type": "integer",
+                                "description": "Bit depth"
+                            },
+                            "compression": {
+                                "type": "string",
+                                "description": "Compression type"
+                            },
+                            "color_profile": {
+                                "type": "string",
+                                "description": "Color profile information"
+                            }
+                        },                        
+                        "required": ["@type", "@position", "dimensions", "pixel_type", "bit_depth"],
+                        "additionalProperties": true
+                    }
+                },
+                "text": {
+                    "type": "array",
+                    "description": "text streams",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "@type": {
+                                "const": "text"
+                            },
+                            "@position": {
+                                "type": "integer",
+                                "description": "stream position"
+                            },
+                            "encoding": {
+                                "type": "string",
+                                "description": "Text encoding"
+                            },
+                            "description": {
+                                "type": "string",
+                                "description": "More-detailed info about text"
+                            }
+                        },
+                        "required": ["@type", "@position", "encoding", "description"],
+                        "additionalProperties": true
+                    }
+                },
+                "document": {
+                    "type": "array",
+                    "description": "document streams",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "@type": {
+                                "const": "document"
+                            },
+                            "@position": {
+                                "type": "integer",
+                                "description": "stream position"
+                            },
+                            "pages": {
+                                "type": "integer",
+                                "description": "Number of pages"
+                            },
+                            "user_data": {
+                                "type": "object",
+                                "description": "User-supplied metadata",
+                                "additionalProperties": true
+                            }
+                        },
+                        "required": ["@type", "@position"],
+                        "additionalProperties": true
+                    }
+                }
+            },
+            "additionalProperties": false
+        },
+        "tags": {
+            "type": "object",
+            "description": "User tags for the file, ignored by mediaprobe",
+            "additionalProperties": true
+        }
+    },
+    "additionalProperties": false,
+    "required": ["container", "streams"],
+    "definitions": {
+        "fraction": {
+            "type": "array",
+            "items": {"type": "integer"},
+            "maxItems": 2,
+            "minItems": 2
+        }
+    }
+}

@@ -49,6 +49,14 @@ class MediaProbe:
         if tool_paths is not None:
             self.paths.update(tool_paths)
 
+    def find_metadata_schema(self):
+        "A hacky way of finding the metadata schema path"
+        parent = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+        path = os.path.join(parent, "media_probe_schema.json")
+        return path
+
+
+
     def get_tool_path(self, tool):
         "Get the executable path for the tool in question"
         if tool not in self.paths or not (os.access(self.paths[tool], os.X_OK) and os.path.isfile(self.paths[tool])):
@@ -315,7 +323,6 @@ class MediaProbe:
             and not re.match(r"application/xml", data['container']['mime_type'])):
             return
         s = {'@type': 'text'}
-
 
         result = subprocess.run([self.get_tool_path('file'), '--brief', '--mime-encoding', '--dereference', file], capture_output=True, check=True)
         s['encoding'] = str(result.stdout, 'utf-8').rstrip()
