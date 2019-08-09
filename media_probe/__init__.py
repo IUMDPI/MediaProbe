@@ -122,7 +122,7 @@ class MediaProbe:
         Use ffprobe to get information about a file and update the data
         structure with that information.
         """
-        if not re.match(r"(audio|video)/", data['container']['mime_type']):
+        if (not re.match(r"(audio|video)/", data['container']['mime_type'])) and not file.endswith(".mkv"):
             return
 
         result = subprocess.run([self.get_tool_path('ffprobe'), '-v', '0', '-print_format', 'json', '-show_format', '-show_streams', file],
