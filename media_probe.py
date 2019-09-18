@@ -22,8 +22,14 @@ import json
 import yaml
 from media_probe import MediaProbe
 import sys
+import os
 
 if __name__ == "__main__":
+    # since we may be running inside of a venv, we need
+    # to move back where the client started us.
+    if 'MEDIAPROBE_OLDPWD' in os.environ:
+        os.chdir(os.environ['MEDIAPROBE_OLDPWD'])
+
     parser = argparse.ArgumentParser(description="Probe a media file for metadata")
     parser.add_argument("--config", type=str, nargs=1, default=[None],
                         help="Specify a YAML config file with tool paths")
@@ -36,7 +42,7 @@ if __name__ == "__main__":
     if args.config[0]:
         with open(args.config[0]) as fp:
             paths = yaml.safe_load(fp)
-    
+
     mp = MediaProbe(paths)
     data = mp.probe(args.mediafile)
 
