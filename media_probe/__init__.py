@@ -98,7 +98,7 @@ class MediaProbe:
         """
         Use the file command to get the mime type for a file
         """    
-        result = subprocess.run([self.get_tool_path('file'), '--brief', '--mime-type', '--dereference', file], capture_output=True, check=True)
+        result = subprocess.run([self.get_tool_path('file'), '--brief', '--mime-type', '--dereference', file], stdout=subprocess.PIPE, check=True)
         mime = str(result.stdout, 'utf-8').rstrip()
 
         # There are some weird corner cases we'd like to pick up...
@@ -109,7 +109,7 @@ class MediaProbe:
         # * It appears that MPEG program streams look like targa image files,
         # we we can detect them by looking a little harder... (plus, nobody uses targa)
         if mime == 'image/x-tga':
-            result = subprocess.run([self.get_tool_path('file'), '-k', '--dereference', file], capture_output=True, check=True)
+            result = subprocess.run([self.get_tool_path('file'), '-k', '--dereference', file], stdout=subprocess.PIPE, check=True)
             extended = str(result.stdout, 'utf-8').rstrip()
             if 'MPEG' in extended:
                 mime = 'video/mpeg'
@@ -126,7 +126,7 @@ class MediaProbe:
             return
 
         result = subprocess.run([self.get_tool_path('ffprobe'), '-v', '0', '-print_format', 'json', '-show_format', '-show_streams', file],
-                                check=True, capture_output=True)
+                                check=True, stdout=subprocess.PIPE)
         f = yaml.load(str(result.stdout, 'utf-8'), Loader=yaml.Loader)
 
         
@@ -292,7 +292,7 @@ class MediaProbe:
     "color_profile": "%[profile:icc]"
     },'''
         result = subprocess.run([self.get_tool_path('identify'), '-format', format_string, file], 
-                                capture_output=True, check=True)
+                                stdout=subprocess.PIPE, check=True)
         data['streams'] = {'image': []}
         counter = 0
         for image in yaml.load('[' + str(result.stdout, 'utf-8').rstrip().rstrip(',') + "]", Loader=yaml.Loader):
@@ -324,10 +324,10 @@ class MediaProbe:
             return
         s = {'@type': 'text'}
 
-        result = subprocess.run([self.get_tool_path('file'), '--brief', '--mime-encoding', '--dereference', file], capture_output=True, check=True)
+        result = subprocess.run([self.get_tool_path('file'), '--brief', '--mime-encoding', '--dereference', file], stdout=subprocess.PIPE, check=True)
         s['encoding'] = str(result.stdout, 'utf-8').rstrip()
 
-        result = subprocess.run([self.get_tool_path('file'), '--brief', '--dereference', file], capture_output=True, check=True)
+        result = subprocess.run([self.get_tool_path('file'), '--brief', '--dereference', file], stdout=subprocess.PIPE, check=True)
         s['description'] = str(result.stdout, 'utf-8').rstrip()
         
         # If this is XML, then let's do a little more probing...basically get the root
@@ -355,7 +355,7 @@ class MediaProbe:
         s = {'@type': 'document'}
         mime_type = data['container']['mime_type']
         if mime_type == "application/pdf":
-            result = subprocess.run([self.get_tool_path('pdfinfo'), file], capture_output=True, check=True)
+            result = subprocess.run([self.get_tool_path('pdfinfo'), file], stdout=subprocess.PIPE, check=True)
             for l in str(result.stdout, 'utf-8').rstrip().split("\n"):
                 print(l)
                 k, v = [x.strip() for x in l.split(":", 1)]
