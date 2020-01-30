@@ -357,9 +357,9 @@ class MediaProbe:
         if mime_type == "application/pdf":
             result = subprocess.run([self.get_tool_path('pdfinfo'), file], stdout=subprocess.PIPE, check=True)
             for l in str(result.stdout, 'utf-8').rstrip().split("\n"):
-                print(l)
+                #print(l)
                 k, v = [x.strip() for x in l.split(":", 1)]
-                print(f"K={k}, V={v}")
+                #print(f"K={k}, V={v}")
                 if k == "PDF version":
                     s['version'] = v
                 elif k == "Pages":
